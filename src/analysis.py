@@ -11,25 +11,34 @@ def analyze_stock(df,
         return {"status": "无阶段性高点"}
 
     latest_peak = peaks[-1]
-    peak_price = df.iloc[latest_peak]["close"]
+    peak_row = df.iloc[latest_peak]
+    peak_price = peak_row["close"]
+    peak_date = peak_row["date"]
 
     trough_idx, trough_drop = find_trough_after_peak(
         df, latest_peak, window, min_drop
     )
 
-    current_price = df.iloc[-1]["close"]
+    current_row = df.iloc[-1]
+    current_price = current_row["close"]
+    current_date = current_row["date"]
     current_drop = (current_price - peak_price) / peak_price
 
     result = {
-        "peak_index": latest_peak,
-        "peak_price": peak_price,
-        "current_price": current_price,
+        "peak_date": peak_date.strftime("%Y-%m-%d"),
+        "peak_price": round(peak_price, 2),
+        "current_date": current_date.strftime("%Y-%m-%d"),
+        "current_price": round(current_price, 2),
         "current_drop_pct": round(current_drop * 100, 2)
     }
 
-    if trough_idx:
-        result["confirmed_trough_index"] = trough_idx
-        result["confirmed_drop_pct"] = round(trough_drop * 100, 2)
+    if trough_idx is not None:
+        trough_row = df.iloc[trough_idx]
+        result.update({
+            "trough_date": trough_row["date"].strftime("%Y-%m-%d"),
+            "trough_price": round(trough_row["close"], 2),
+            "trough_drop_pct": round(trough_drop * 100, 2)
+        })
 
     if current_drop >= -min_drop:
         result["stage"] = "尚未形成有效下跌"

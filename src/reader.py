@@ -27,9 +27,6 @@ def read_stock_excel(path: str) -> pd.DataFrame:
     df["date"] = pd.to_datetime(date_split[0])
     df["weekday"] = date_split[1]  # '一' '二' '三'
 
-    # 只保留我们关心的字段
-    df = df[list(COLUMN_MAPPING.values())]
-
     # 清洗：确保数值类型
     for col in [
         "open", "high", "low", "close",
