@@ -1,18 +1,44 @@
 from reader import read_stock_excel
-from analysis import analyze_stock
+from analysis import analyze_stock, analyze_all_peaks
 from pathlib import Path
+from datetime import datetime
 
 if __name__ == "__main__":
     BASE_DIR = Path(__file__).resolve().parent.parent
     df = read_stock_excel(BASE_DIR / "data/兴业银锡-000426.xlsx")
 
-    result = analyze_stock(
-        df,
-        window=5,
-        min_drop=0.03,
-        max_buy_drop=0.10
+    result_df = analyze_all_peaks(df)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    filename = f"output/peak_trough_analysis_{timestamp}.csv"
+
+    result_df.to_csv(
+        filename,
+        index=False,
+        encoding="utf-8-sig"
     )
 
-    print("分析结果：")
-    for k, v in result.items():
-        print(f"{k}: {v}")
+    # filename = f"output/peak_trough_analysis_{timestamp}.txt"
+
+    # with open(filename, "w", encoding="utf-8") as f:
+    #     for _, row in result_df.iterrows():
+    #         f.write(
+    #             f"峰值日期: {row['peak_date']} | "
+    #             f"峰值价: {row['peak_price']} | "
+    #             f"谷值日期: {row['trough_date']} | "
+    #             f"谷值价: {row['trough_price']} | "
+    #             f"最大跌幅: {row['max_drop_pct']}%\n"
+    #         )
+
+
+    # result = analyze_stock(
+    #     df,
+    #     window=5,
+    #     min_drop=0.03,
+    #     max_buy_drop=0.10
+    # )
+
+    # print("分析结果：")
+    # for k, v in result.items():
+    #     print(f"{k}: {v}")

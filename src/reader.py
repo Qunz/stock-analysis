@@ -24,7 +24,7 @@ def read_stock_excel(path: str) -> pd.DataFrame:
 
     # —— 1️⃣ 拆分日期列 ——
     date_split = df["raw_date"].astype(str).str.split(",", expand=True)
-    df["date"] = pd.to_datetime(date_split[0])
+    df["date"] = pd.to_datetime(date_split[0]).dt.date
     df["weekday"] = date_split[1]  # '一' '二' '三'
 
     # 清洗：确保数值类型

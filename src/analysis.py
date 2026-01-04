@@ -1,4 +1,41 @@
-from peak_trough import find_peaks, find_trough_after_peak
+from peak_trough import find_peaks, find_trough_after_peak, find_min_trough_between
+import pandas as pd
+
+
+def analyze_all_peaks(df):
+    results = []
+
+    peaks = find_peaks(df)
+
+    for i, peak_idx in enumerate(peaks):
+        peak_row = df.iloc[peak_idx]
+        peak_price = peak_row["close"]
+        peak_date = peak_row["date"]
+
+        if i < len(peaks) - 1:
+            end_idx = peaks[i + 1]
+        else:
+            end_idx = len(df)
+
+        trough_idx, drop_pct = find_min_trough_between(
+            df, peak_idx, end_idx
+        )
+
+        if trough_idx is None:
+            continue
+
+        trough_row = df.loc[trough_idx]
+
+        results.append({
+            "peak_date": peak_date,
+            "peak_price": round(peak_price, 2),
+            "trough_date": trough_row["date"],
+            "trough_price": round(trough_row["close"], 2),
+            "max_drop_pct": round(drop_pct * 100, 2),
+            "drop_ge_3pct": drop_pct <= -0.03  # 分析指标
+        })
+
+    return pd.DataFrame(results)
 
 
 def analyze_stock(df,
