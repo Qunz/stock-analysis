@@ -14,26 +14,64 @@ def analyze_all_peaks(df):
 
         if i < len(peaks) - 1:
             end_idx = peaks[i + 1]
+
+            next_peak_idx = peaks[i + 1]
+            next_peak_row = df.iloc[next_peak_idx]
+            next_peak_price = next_peak_row["close"]
+            next_peak_date = next_peak_row["date"]
         else:
             end_idx = len(df)
+
+            next_peak_idx = None
+            next_peak_price = None
+            next_peak_date = None
 
         trough_idx, drop_pct = find_min_trough_between(
             df, peak_idx, end_idx
         )
 
+        # ===> 这一段会代码会导致部分峰值没有对应的谷值
+        # if trough_idx is None:
+        #     continue
+
+        # trough_row = df.loc[trough_idx]
+        # <===
+
         if trough_idx is None:
-            continue
+            # 没有谷值
+            results.append({
+                "峰值日期": peak_date,
+                "峰值价格": round(peak_price, 2),
+                "谷值日期": None,
+                "谷值价格": None,
+                "最大跌幅%": None,
+                "跌幅>=3%": False,
+                "下一个峰值日期": next_peak_date,
+                "谷值到下个峰值涨幅%": None,
+                "状态": f"无有效谷值"
+            })
+        else:
+            trough_row = df.loc[trough_idx]
+            trough_price = trough_row["close"]
 
-        trough_row = df.loc[trough_idx]
+            # 计算 谷值 → 下一个峰值 的涨幅
+            if next_peak_price is not None:
+                rise_pct = (next_peak_price - trough_price) / trough_price
+                rise_pct = round(rise_pct * 100, 2)
+            else:
+                rise_pct = None
 
-        results.append({
-            "peak_date": peak_date,
-            "peak_price": round(peak_price, 2),
-            "trough_date": trough_row["date"],
-            "trough_price": round(trough_row["close"], 2),
-            "max_drop_pct": round(drop_pct * 100, 2),
-            "drop_ge_3pct": drop_pct <= -0.03  # 分析指标
-        })
+            results.append({
+                "峰值日期": peak_date,
+                "峰值价格": round(peak_price, 2),
+                "谷值日期": trough_row["date"],
+                "谷值价格": round(trough_row["close"], 2),
+                "最大跌幅%": round(drop_pct * 100, 2),
+                "跌幅>=3%": drop_pct <= -0.03,
+                "下一个峰值日期": next_peak_date,
+                "谷值到下个峰值涨幅%": rise_pct,
+                "状态": "有效回撤"
+            })
 
     return pd.DataFrame(results)
 
